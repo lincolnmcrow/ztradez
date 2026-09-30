@@ -8,7 +8,7 @@ One-page site for ZTRADEZ private 1-on-1 futures mentorship. Plain HTML, CSS and
 - Real Zander photography throughout, with a draggable gallery and full-screen photo viewer
 
 ## Sections
-Hero (with live New York clock and CME Globex open/closed status) · Approach · Mentorship · What's included · Reported numbers · Fit check · How it works · Student story (click-to-load YouTube) · About · Gallery · Alpha Futures affiliate · Follow · Application · FAQ
+Hero (rotating headline word synced to an Instagram-story-style photo slideshow, decorative streaming candlestick chart, count-up proof numbers, cursor glow, live New York clock and CME Globex status) · Approach · Mentorship · What's included · Reported numbers · Fit check · How it works · Student story (click-to-load YouTube) · About · Gallery · Alpha Futures affiliate · Follow · Application · FAQ
 
 ## Pages
 - `index.html` — main one-page site

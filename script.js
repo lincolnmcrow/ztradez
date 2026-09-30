@@ -93,13 +93,15 @@
     const target = Number(el.dataset.target || 0);
     if (reduceMotion) { el.textContent = target.toLocaleString(); return; }
     const duration = 1600;
-    const start = performance.now();
-    const tick = (now) => {
-      const p = Math.min((now - start) / duration, 1);
-      el.textContent = Math.round(target * (1 - Math.pow(1 - p, 4))).toLocaleString();
-      if (p < 1) requestAnimationFrame(tick);
-    };
-    requestAnimationFrame(tick);
+    setTimeout(() => {
+      const start = performance.now();
+      const tick = (now) => {
+        const p = Math.min((now - start) / duration, 1);
+        el.textContent = Math.round(target * (1 - Math.pow(1 - p, 4))).toLocaleString();
+        if (p < 1) requestAnimationFrame(tick);
+      };
+      requestAnimationFrame(tick);
+    }, Number(el.dataset.delay || 0));
   };
   const counters = $$('.counter');
   if ('IntersectionObserver' in window) {
@@ -174,6 +176,167 @@
     };
     updateClock();
     setInterval(updateClock, 1000);
+  }
+
+
+  /* ---------- Hero story: photo slideshow + rotating headline word ---------- */
+  const story = $('#heroStory');
+  if (story) {
+    const slides = $$('.story-slide', story);
+    const bars = $$('.story-bars span', story);
+    const words = $$('#heroRotator em');
+    const cap = $('.story-cap', story);
+    const capIndex = $('#storyIndex');
+    const capLabel = $('#storyLabel');
+    const DURATION = 4800;
+    let index = 0, wordIndex = 0, progress = 0, last = 0, hovering = false, visible = true;
+
+    const nextWord = () => {
+      if (words.length < 2) return;
+      const out = words[wordIndex];
+      wordIndex = (wordIndex + 1) % words.length;
+      const inn = words[wordIndex];
+      out.classList.remove('is-active');
+      out.classList.add('is-leaving');
+      setTimeout(() => out.classList.remove('is-leaving'), 900);
+      inn.classList.remove('is-leaving');
+      inn.classList.add('is-active');
+    };
+
+    const show = (next) => {
+      index = (next + slides.length) % slides.length;
+      progress = 0;
+      slides.forEach((img, i) => img.classList.toggle('is-active', i === index));
+      bars.forEach((bar, i) => bar.style.setProperty('--p', i < index ? 1 : 0));
+      nextWord();
+      cap.classList.add('is-swapping');
+      setTimeout(() => {
+        capIndex.textContent = `${String(index + 1).padStart(2, '0')} / ${String(slides.length).padStart(2, '0')}`;
+        capLabel.textContent = slides[index].dataset.caption;
+        cap.classList.remove('is-swapping');
+      }, 250);
+    };
+
+    const tick = (now) => {
+      const dt = last ? Math.min(now - last, 100) : 0;
+      last = now;
+      if (!hovering && visible && document.body.classList.contains('is-ready')) {
+        progress += dt / DURATION;
+        bars[index]?.style.setProperty('--p', Math.min(progress, 1));
+        if (progress >= 1) show(index + 1);
+      }
+      requestAnimationFrame(tick);
+    };
+
+    $('.story-hit', story).addEventListener('click', () => show(index + 1));
+    if (!reduceMotion) {
+      story.addEventListener('pointerenter', (e) => { if (e.pointerType === 'mouse') hovering = true; });
+      story.addEventListener('pointerleave', () => { hovering = false; });
+      if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { visible = e.isIntersecting; }).observe(story);
+      requestAnimationFrame(tick);
+    }
+  }
+
+  /* ---------- Hero candle tape (decorative) ---------- */
+  const tape = $('#heroTape');
+  if (tape && tape.getContext) {
+    const ctx = tape.getContext('2d');
+    const BODY = 11, GAP = 7, STEP = BODY + GAP, SPEED = 16; // px per second
+    let w = 0, h = 0, dpr = 1, candles = [], offset = 0, lo = 0, hi = 1, t = 0, lastT = 0, jitterAt = 0, running = true;
+
+    const makeCandle = (open) => {
+      const drift = 0.18 + 0.55 * Math.sin(t / 9) + 0.25 * Math.sin(t / 3.1);
+      const close = open + (Math.random() - 0.5) * 2.4 + drift;
+      return { o: open, c: close, h: Math.max(open, close) + Math.random() * 1.4, l: Math.min(open, close) - Math.random() * 1.4 };
+    };
+    const resize = () => {
+      dpr = Math.min(window.devicePixelRatio || 1, 2);
+      w = tape.clientWidth; h = tape.clientHeight;
+      tape.width = Math.round(w * dpr); tape.height = Math.round(h * dpr);
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const needed = Math.ceil(w / STEP) + 3;
+      if (!candles.length) candles.push(makeCandle(100));
+      while (candles.length < needed) { t += 1; candles.unshift(makeCandle(candles[0].o - (candles[0].c - candles[0].o) - 0.3)); }
+      const vis = candles.slice(-needed);
+      lo = Math.min(...vis.map((c) => c.l)); hi = Math.max(...vis.map((c) => c.h));
+    };
+    const draw = () => {
+      ctx.clearRect(0, 0, w, h);
+      const pad = h * 0.08;
+      const y = (v) => pad + ((hi - v) / (hi - lo || 1)) * (h - pad * 2);
+      const n = candles.length;
+      const rightEdge = w - STEP * 1.5;
+      let tLo = Infinity, tHi = -Infinity;
+      for (let i = 0; i < n; i++) {
+        const c = candles[i];
+        const x = rightEdge - (n - 1 - i) * STEP - offset;
+        if (x < -STEP || x > w + STEP) continue;
+        tLo = Math.min(tLo, c.l); tHi = Math.max(tHi, c.h);
+        const up = c.c >= c.o;
+        ctx.strokeStyle = up ? 'rgba(242,239,233,.11)' : 'rgba(223,51,36,.22)';
+        ctx.fillStyle = up ? 'rgba(242,239,233,.075)' : 'rgba(223,51,36,.17)';
+        ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(Math.round(x) + 0.5, y(c.h)); ctx.lineTo(Math.round(x) + 0.5, y(c.l)); ctx.stroke();
+        const top = y(Math.max(c.o, c.c)), bot = y(Math.min(c.o, c.c));
+        ctx.fillRect(Math.round(x - BODY / 2), top, BODY, Math.max(bot - top, 1.5));
+      }
+      // live price line
+      const live = candles[n - 1];
+      const ly = Math.round(y(live.c)) + 0.5;
+      ctx.setLineDash([3, 6]); ctx.strokeStyle = 'rgba(223,51,36,.3)';
+      ctx.beginPath(); ctx.moveTo(0, ly); ctx.lineTo(w, ly); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = 'rgba(223,51,36,.75)';
+      ctx.beginPath(); ctx.arc(rightEdge - offset, ly, 3, 0, Math.PI * 2); ctx.fill();
+      // ease the price range toward what's visible
+      if (isFinite(tLo)) { lo += (tLo - lo) * 0.04; hi += (tHi - hi) * 0.04; }
+    };
+    const frame = (now) => {
+      const dt = lastT ? Math.min((now - lastT) / 1000, 0.05) : 0;
+      lastT = now;
+      if (running) {
+        offset += SPEED * dt;
+        const live = candles[candles.length - 1];
+        if (now > jitterAt) {
+          live.c += (Math.random() - 0.5) * 0.9 + 0.05;
+          live.h = Math.max(live.h, live.c); live.l = Math.min(live.l, live.c);
+          jitterAt = now + 90;
+        }
+        if (offset >= STEP) {
+          offset -= STEP; t += 1;
+          candles.push(makeCandle(live.c));
+          if (candles.length > Math.ceil(w / STEP) + 6) candles.shift();
+        }
+        draw();
+      }
+      requestAnimationFrame(frame);
+    };
+    resize(); draw();
+    addEventListener('resize', () => { resize(); draw(); });
+    if (!reduceMotion) {
+      if ('IntersectionObserver' in window) new IntersectionObserver(([e]) => { running = e.isIntersecting; lastT = 0; }).observe(tape);
+      requestAnimationFrame(frame);
+    }
+  }
+
+  /* ---------- Hero cursor glow ---------- */
+  const glow = $('#heroGlow');
+  const hero = $('.hero');
+  if (glow && hero && !reduceMotion && window.matchMedia('(hover: hover) and (pointer: fine)').matches) {
+    let tx = 0, ty = 0, gx = 0, gy = 0, active = false;
+    const follow = () => {
+      gx += (tx - gx) * 0.12; gy += (ty - gy) * 0.12;
+      glow.style.transform = `translate3d(${gx.toFixed(1)}px, ${gy.toFixed(1)}px, 0)`;
+      if (active || Math.abs(tx - gx) > 0.5 || Math.abs(ty - gy) > 0.5) requestAnimationFrame(follow);
+    };
+    hero.addEventListener('pointermove', (e) => {
+      const r = hero.getBoundingClientRect();
+      tx = e.clientX - r.left; ty = e.clientY - r.top;
+      if (!active) {
+        if (!glow.classList.contains('is-on')) { gx = tx; gy = ty; }
+        active = true; glow.classList.add('is-on'); requestAnimationFrame(follow);
+      }
+    });
+    hero.addEventListener('pointerleave', () => { active = false; glow.classList.remove('is-on'); });
   }
 
   /* ---------- Video facade ---------- */

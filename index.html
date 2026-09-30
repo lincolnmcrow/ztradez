@@ -70,33 +70,43 @@
   <main id="main">
     <!-- Hero -->
     <section class="hero" id="top">
+      <canvas class="hero-tape" id="heroTape" aria-hidden="true"></canvas>
+      <div class="hero-glow" id="heroGlow" aria-hidden="true"></div>
+
       <div class="shell hero-grid">
         <div class="hero-copy">
           <p class="kicker hero-in" style="--d:0"><span class="live-dot" aria-hidden="true"></span>Private 1-on-1 futures mentorship</p>
           <h1 class="hero-title">
-            <span class="line"><span style="--d:1">Trade with</span></span>
-            <span class="line"><span style="--d:2"><em>a process.</em></span></span>
+            <span class="visually-hidden">Trade with a process.</span>
+            <span class="line" aria-hidden="true"><span style="--d:1">Trade with</span></span>
+            <span class="line" aria-hidden="true"><span style="--d:2"><span class="rotator" id="heroRotator"><em class="is-active">a process.</em><em>discipline.</em><em>a plan.</em><em>patience.</em><em>an edge.</em></span></span></span>
           </h1>
           <p class="hero-lede hero-in" style="--d:3">Work directly with Zander to sharpen how you read the market, execute setups, manage risk, and stay disciplined when it matters.</p>
           <div class="hero-actions hero-in" style="--d:4">
             <a class="btn btn-primary" href="#apply">Apply for mentorship <span class="btn-arrow" aria-hidden="true">→</span></a>
             <a class="link-arrow" href="https://discord.com/invite/qkc7znma6t" target="_blank" rel="noopener noreferrer">Join the Discord <span aria-hidden="true">↗</span></a>
           </div>
-          <dl class="hero-meta hero-in" style="--d:5">
-            <div><dt>Format</dt><dd>Private 1-on-1</dd></div>
-            <div><dt>Market</dt><dd>Futures</dd></div>
-            <div><dt>Affiliate</dt><dd>Alpha Futures</dd></div>
+          <dl class="hero-proof hero-in" style="--d:5">
+            <div><dt>Payouts reported</dt><dd><span class="counter" data-target="500" data-delay="900">0</span><sup>+</sup></dd></div>
+            <div><dt>Student winnings</dt><dd><sub>$</sub><span class="counter" data-target="1" data-delay="900">0</span><sup>M+</sup></dd></div>
+            <div><dt>Students mentored</dt><dd><span class="counter" data-target="50" data-delay="900">0</span><sup>+</sup></dd></div>
           </dl>
         </div>
 
         <div class="hero-media hero-in" style="--d:2">
-          <figure class="hero-portrait" data-parallax="0.06">
-            <img src="assets/photos/portrait.webp" width="1400" height="1867" alt="Zander, founder of ZTRADEZ, on a rooftop at dusk" fetchpriority="high" />
+          <figure class="hero-portrait story" id="heroStory">
+            <img class="story-slide is-active" src="assets/photos/portrait.webp" width="1400" height="1867" alt="Zander, founder of ZTRADEZ, on a rooftop at dusk" data-caption="Zander" fetchpriority="high" />
+            <img class="story-slide" src="assets/photos/city-night-balcony.webp" width="1400" height="1867" alt="Zander on a high-rise balcony overlooking the city at night" data-caption="After the close" decoding="async" />
+            <img class="story-slide" src="assets/photos/ferrari-driveway-1.webp" width="1200" height="1600" alt="Zander standing beside a light blue Ferrari in a driveway" data-caption="The driveway" decoding="async" />
+            <img class="story-slide" src="assets/photos/alpha-futures-event.webp" width="1080" height="1440" alt="Zander speaking at an Alpha Futures event" data-caption="Alpha Futures event" decoding="async" />
+            <div class="story-bars" aria-hidden="true"><span></span><span></span><span></span><span></span></div>
             <div class="market-chip" aria-live="off">
               <span class="market-dot" id="marketDot" aria-hidden="true"></span>
               <span class="market-label" id="marketStatus">CME Globex</span>
               <span class="market-time"><span id="nyClock">--:--:--</span> ET</span>
             </div>
+            <figcaption class="story-cap" aria-live="polite"><span id="storyIndex">01 / 04</span><span id="storyLabel">Zander</span></figcaption>
+            <button class="story-hit" type="button" aria-label="Show next photo"></button>
           </figure>
           <figure class="hero-inset">
             <img src="assets/photos/rooftop-night-phone.webp" width="1400" height="1867" alt="Zander checking his phone on a rooftop terrace at night" />
