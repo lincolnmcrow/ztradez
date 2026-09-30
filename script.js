@@ -277,103 +277,190 @@
     matchMedia('(min-width: 1101px)').addEventListener('change', (e) => { if (e.matches) setMenu(false); });
   }
 
-  /* ---------- Application form ---------- */
-  const form = $('#mentorshipForm');
-  if (!form) return;
-  const steps = $$('.form-step', form);
-  const success = $('.form-success', form);
-  const errorBox = $('#formError');
-  const progressLabel = $('#progressLabel');
-  const progressBar = $('#progressBar');
-  const last = steps.length - 1;
-  let current = 0;
+  /* ---------- Form helpers ---------- */
+  const postToNetlify = async (formEl) => {
+    const response = await fetch('/', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+      body: new URLSearchParams(new FormData(formEl)).toString()
+    });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+  };
 
-  const setError = (message, field) => {
-    $$('[aria-invalid]', form).forEach((el) => el.removeAttribute('aria-invalid'));
-    errorBox.hidden = !message;
-    errorBox.textContent = message || '';
+  const errorReporter = (formEl, box) => (message, field) => {
+    $$('[aria-invalid]', formEl).forEach((el) => el.removeAttribute('aria-invalid'));
+    box.hidden = !message;
+    box.textContent = message || '';
     if (field) { field.setAttribute('aria-invalid', 'true'); field.focus(); }
   };
 
-  const showStep = (i, focus = true) => {
-    current = Math.max(0, Math.min(i, last));
-    steps.forEach((step, n) => step.classList.toggle('active', n === current));
-    setError('');
-    if (progressLabel) progressLabel.textContent = `${String(current + 1).padStart(2, '0')} / ${String(steps.length).padStart(2, '0')}`;
-    if (progressBar) progressBar.style.transform = `scaleX(${(current + 1) / steps.length})`;
-    if (focus) {
-      const target = $('input:not([type="hidden"]):not([type="radio"]), textarea, input:checked', steps[current]) || $('input[type="radio"]', steps[current]);
-      target?.focus({ preventScroll: true });
-    }
-  };
+  const field = (formEl, name) => formEl.elements.namedItem(name);
+  const RECAP_KEY = 'ztradez-application';
 
-  const messages = {
-    name: 'Add your name to continue.',
-    why: 'Add a sentence or two about what you want to improve.',
-    email: 'Enter a valid email address so we can reach you.',
-    radio: 'Choose one option to continue.'
-  };
+  /* ---------- Application form ---------- */
+  const form = $('#mentorshipForm');
+  if (form) {
+    const steps = $$('.form-step', form);
+    const setError = errorReporter(form, $('#formError'));
+    const progressLabel = $('#progressLabel');
+    const progressBar = $('#progressBar');
+    const last = steps.length - 1;
+    let current = 0;
 
-  const validateStep = (step) => {
-    for (const input of $$('[required]', step)) {
-      if (input.type === 'radio') {
-        if (!$(`input[name="${CSS.escape(input.name)}"]:checked`, step)) {
-          setError(messages.radio);
-          $(`input[name="${CSS.escape(input.name)}"]`, step)?.focus();
+    const showStep = (i, focus = true) => {
+      current = Math.max(0, Math.min(i, last));
+      steps.forEach((step, n) => step.classList.toggle('active', n === current));
+      setError('');
+      if (progressLabel) progressLabel.textContent = `${String(current + 1).padStart(2, '0')} / ${String(steps.length).padStart(2, '0')}`;
+      if (progressBar) progressBar.style.transform = `scaleX(${(current + 1) / steps.length})`;
+      if (focus) {
+        const target = $('input:not([type="hidden"]):not([type="radio"]), textarea, input:checked', steps[current]) || $('input[type="radio"]', steps[current]);
+        target?.focus({ preventScroll: true });
+      }
+    };
+
+    const messages = {
+      name: 'Add your name to continue.',
+      why: 'Add a sentence or two about what you want to improve.',
+      email: 'Enter a valid email address so we can reach you.',
+      radio: 'Choose one option to continue.'
+    };
+
+    const validateStep = (step) => {
+      for (const input of $$('[required]', step)) {
+        if (input.type === 'radio') {
+          if (!$(`input[name="${CSS.escape(input.name)}"]:checked`, step)) {
+            setError(messages.radio);
+            $(`input[name="${CSS.escape(input.name)}"]`, step)?.focus();
+            return false;
+          }
+        } else if (!input.value.trim() || !input.checkValidity()) {
+          setError(messages[input.name] || 'Please complete this field.', input);
           return false;
         }
-      } else if (!input.value.trim() || !input.checkValidity()) {
-        setError(messages[input.name] || 'Please complete this field.', input);
+      }
+      setError('');
+      return true;
+    };
+
+    const next = () => { if (validateStep(steps[current])) showStep(current + 1); };
+    $$('.form-next', form).forEach((btn) => btn.addEventListener('click', next));
+    $$('.form-back', form).forEach((btn) => btn.addEventListener('click', () => showStep(current - 1)));
+
+    form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid')) setError(''); });
+    form.addEventListener('change', (e) => {
+      if (e.target.type !== 'radio') return;
+      setError('');
+      const stepIndex = steps.indexOf(e.target.closest('.form-step'));
+      if (stepIndex === current && current < last) setTimeout(() => { if (current === stepIndex) showStep(current + 1); }, 360);
+    });
+    form.addEventListener('keydown', (e) => {
+      if (e.key !== 'Enter' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
+      e.preventDefault();
+      if (current < last) next();
+      else form.requestSubmit();
+    });
+
+    // Answers are kept in this tab only, so the thank-you page can show them back
+    const saveRecap = () => {
+      const label = (name) => $(`input[name="${name}"]:checked`, form)?.nextElementSibling?.textContent.trim() || '';
+      const value = (name) => (field(form, name)?.value || '').trim();
+      try {
+        sessionStorage.setItem(RECAP_KEY, JSON.stringify({
+          name: value('name'), experience: label('experience'), market: label('market'), challenge: label('challenge'),
+          why: value('why'), email: value('email'), discord: value('discord'), at: Date.now()
+        }));
+      } catch (error) { /* storage unavailable: thank-you page falls back to a generic message */ }
+    };
+
+    form.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (current < last) { next(); return; }
+      if (!validateStep(steps[current])) return;
+
+      const submit = $('.form-submit', form);
+      const original = submit.innerHTML;
+      submit.disabled = true;
+      submit.textContent = 'Submitting…';
+      try {
+        await postToNetlify(form);
+      } catch (error) {
+        submit.disabled = false;
+        submit.innerHTML = original;
+        setError('Your application could not be sent. Check your connection and try again, or reach ZTRADEZ through Discord.');
+        return;
+      }
+      saveRecap();
+      location.href = 'thank-you.html';
+    });
+
+    showStep(0, false);
+  }
+
+  /* ---------- Thank-you recap ---------- */
+  const recap = $('#recap');
+  if (recap) {
+    let data = null;
+    try { data = JSON.parse(sessionStorage.getItem(RECAP_KEY) || 'null'); } catch (error) { data = null; }
+    if (data?.name) {
+      $$('[data-recap]', recap).forEach((dd) => {
+        const value = String(data[dd.dataset.recap] || '').trim();
+        if (value) dd.textContent = dd.classList.contains('quote') ? `“${value}”` : value;
+        else dd.closest('.recap-row').hidden = true;
+      });
+      $('#tyGreeting').textContent = `Thank you, ${data.name.split(/\s+/)[0]}.`;
+      if (data.at) {
+        $('#recapTime').textContent = new Intl.DateTimeFormat('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }).format(data.at);
+      }
+      recap.hidden = false;
+    } else {
+      $('#tyGrid')?.classList.add('no-recap');
+    }
+  }
+
+  /* ---------- Student review form ---------- */
+  const reviewForm = $('#reviewForm');
+  if (reviewForm) {
+    const setError = errorReporter(reviewForm, $('.form-error', reviewForm));
+    const stars = $('.stars', reviewForm);
+
+    const validate = () => {
+      const name = field(reviewForm, 'name');
+      const duration = field(reviewForm, 'duration');
+      const review = field(reviewForm, 'review');
+      const email = field(reviewForm, 'email');
+      if (!name.value.trim()) { setError('Add your name or handle.', name); return false; }
+      if (!duration.value) { setError('Choose how long you were in mentorship.', duration); return false; }
+      if (!$('input[name="rating"]:checked', reviewForm)) {
+        setError('Choose a star rating.');
+        stars.setAttribute('aria-invalid', 'true');
+        $('#star5')?.focus();
         return false;
       }
-    }
-    setError('');
-    return true;
-  };
+      if (review.value.trim().length < 10) { setError('Write at least a sentence about your experience.', review); return false; }
+      if (!email.value.trim() || !email.checkValidity()) { setError('Enter a valid email so we can confirm the review is yours.', email); return false; }
+      setError('');
+      return true;
+    };
 
-  const next = () => { if (validateStep(steps[current])) showStep(current + 1); };
-  $$('.form-next', form).forEach((btn) => btn.addEventListener('click', next));
-  $$('.form-back', form).forEach((btn) => btn.addEventListener('click', () => showStep(current - 1)));
-
-  form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid')) setError(''); });
-  form.addEventListener('change', (e) => {
-    if (e.target.type !== 'radio') return;
-    setError('');
-    const stepIndex = steps.indexOf(e.target.closest('.form-step'));
-    if (stepIndex === current && current < last) setTimeout(() => { if (current === stepIndex) showStep(current + 1); }, 360);
-  });
-  form.addEventListener('keydown', (e) => {
-    if (e.key !== 'Enter' || e.target.tagName === 'TEXTAREA' || e.target.tagName === 'BUTTON') return;
-    e.preventDefault();
-    if (current < last) next();
-    else form.requestSubmit();
-  });
-
-  form.addEventListener('submit', async (event) => {
-    event.preventDefault();
-    if (current < last) { next(); return; }
-    if (!validateStep(steps[current])) return;
-
-    const submit = $('.form-submit', form);
-    const original = submit.innerHTML;
-    submit.disabled = true;
-    submit.textContent = 'Submitting…';
-
-    try {
-      const body = new URLSearchParams(new FormData(form)).toString();
-      const response = await fetch('/', { method: 'POST', headers: { 'Content-Type': 'application/x-www-form-urlencoded' }, body });
-      if (!response.ok) throw new Error(`HTTP ${response.status}`);
-    } catch (error) {
-      submit.disabled = false;
-      submit.innerHTML = original;
-      setError('Your application could not be sent. Check your connection and try again, or reach ZTRADEZ through Discord.');
-      return;
-    }
-
-    steps.forEach((step) => step.classList.remove('active'));
-    $('.form-progress', form).hidden = true;
-    success.classList.add('active');
-  });
-
-  showStep(0, false);
+    reviewForm.addEventListener('input', () => { if ($('[aria-invalid]', reviewForm)) setError(''); });
+    reviewForm.addEventListener('submit', async (event) => {
+      event.preventDefault();
+      if (!validate()) return;
+      const submit = $('.form-submit', reviewForm);
+      const original = submit.innerHTML;
+      submit.disabled = true;
+      submit.textContent = 'Sending…';
+      try {
+        await postToNetlify(reviewForm);
+      } catch (error) {
+        submit.disabled = false;
+        submit.innerHTML = original;
+        setError('Your review could not be sent. Check your connection and try again.');
+        return;
+      }
+      reviewForm.classList.add('is-sent');
+      $('.form-success', reviewForm).scrollIntoView({ block: 'center', behavior: reduceMotion ? 'auto' : 'smooth' });
+    });
+  }
 })();
