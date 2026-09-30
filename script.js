@@ -139,6 +139,18 @@
     $$('#apply, .final-cta, .site-footer').forEach((el) => bo.observe(el));
   }
 
+  /* ---------- Legal page table of contents ---------- */
+  const tocLinks = $$('.legal-toc a[href^="#"]');
+  if (tocLinks.length && 'IntersectionObserver' in window) {
+    const lo = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (!entry.isIntersecting) return;
+        tocLinks.forEach((a) => a.classList.toggle('active', a.getAttribute('href') === `#${entry.target.id}`));
+      });
+    }, { rootMargin: '-20% 0px -70% 0px' });
+    tocLinks.forEach((a) => { const s = document.querySelector(a.getAttribute('href')); if (s) lo.observe(s); });
+  }
+
   /* ---------- New York clock + CME Globex status ---------- */
   const clock = $('#nyClock');
   const status = $('#marketStatus');
@@ -368,6 +380,7 @@
       try {
         sessionStorage.setItem(RECAP_KEY, JSON.stringify({
           name: value('name'), experience: label('experience'), market: label('market'), challenge: label('challenge'),
+          investment: label('investment'), source: label('source'),
           why: value('why'), email: value('email'), discord: value('discord'), at: Date.now()
         }));
       } catch (error) { /* storage unavailable: thank-you page falls back to a generic message */ }

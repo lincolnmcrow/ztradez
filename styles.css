@@ -882,6 +882,88 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
   .header-link-always { font-size: .8125rem; }
 }
 
+
+/* ---------- What's included ---------- */
+.included-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: clamp(24px, 3vw, 48px); align-items: start; }
+.included-copy { grid-column: 1 / span 5; display: grid; gap: 28px; justify-items: start; position: sticky; top: 112px; }
+.included-copy > p:not(.kicker) { color: var(--ink-2); font-size: 1.125rem; line-height: 1.65; max-width: 40ch; }
+.spec { margin: 4px 0 0; width: 100%; display: grid; grid-template-columns: 1fr 1fr; border-top: 1px solid var(--line-2); }
+.spec div { padding: 16px 0; border-bottom: 1px solid var(--line); }
+.spec div:nth-child(odd) { padding-right: 16px; }
+.spec div:nth-child(even) { padding-left: 16px; border-left: 1px solid var(--line); }
+.spec dt { font-family: var(--mono); font-size: .6875rem; letter-spacing: .08em; text-transform: uppercase; color: var(--ink-3); }
+.spec dd { margin: 6px 0 0; font-size: 1.0625rem; }
+.included-cta { display: grid; gap: 14px; justify-items: start; margin-top: 8px; }
+.inc-grid { grid-column: 7 / span 6; list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 12px; }
+.inc {
+  position: relative; display: grid; align-content: start; gap: 10px;
+  padding: 28px 26px 30px; border: 1px solid var(--line); border-radius: 8px; background: var(--panel);
+  transition: border-color .4s ease, transform .6s var(--ease), background .4s ease;
+}
+.inc:hover { border-color: var(--line-2); transform: translateY(-3px); }
+.inc-icon {
+  width: 48px; height: 48px; margin-bottom: 18px; display: grid; place-items: center;
+  border-radius: 12px; border: 1px solid var(--line-2); background: var(--bg); color: var(--ink);
+  transition: color .3s ease, border-color .3s ease, background .3s ease;
+}
+.inc:hover .inc-icon { color: var(--red); border-color: rgba(223, 51, 36, .45); }
+.inc h3 { font-size: 1.25rem; letter-spacing: -.025em; }
+.inc p { color: var(--ink-2); font-size: .9375rem; line-height: 1.55; }
+.inc-feature { background: linear-gradient(160deg, rgba(223, 51, 36, .16), transparent 65%), var(--panel); border-color: rgba(223, 51, 36, .32); }
+.inc-feature .inc-icon { color: #fff; background: var(--red); border-color: var(--red); }
+.inc-feature:hover .inc-icon { color: #fff; border-color: var(--red); }
+
+.form-disclaimer a, .form-note a { color: inherit; text-decoration: underline; text-underline-offset: 3px; text-decoration-color: rgba(17, 17, 17, .35); }
+.form-disclaimer a:hover, .form-note a:hover { color: var(--red); text-decoration-color: currentColor; }
+.form-note { margin-top: 12px; font-size: .8125rem; color: rgba(17, 17, 17, .55); }
+
+.footer-bottom { align-items: center; }
+.legal-links { display: flex; gap: 22px; }
+.legal-links a { color: var(--ink-2); transition: color .3s ease; }
+.legal-links a:hover, .legal-links a[aria-current="page"] { color: var(--ink); }
+
+/* ---------- Legal pages ---------- */
+.legal-hero { padding-bottom: clamp(56px, 8vh, 96px); }
+.legal-hero .page-title { font-size: clamp(2.8rem, 6.4vw, 6.4rem); max-width: 16ch; }
+.legal-updated { font-family: var(--mono); font-size: .75rem; letter-spacing: .06em; text-transform: uppercase; color: var(--ink-3); }
+.legal-grid { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); gap: clamp(24px, 3vw, 48px); align-items: start; }
+.legal-toc { grid-column: 1 / span 4; position: sticky; top: 104px; display: grid; gap: 18px; justify-items: start; }
+.legal-toc ol { list-style: none; margin: 0; padding: 0; width: 100%; border-top: 1px solid var(--line); }
+.legal-toc li a { display: flex; gap: 14px; align-items: baseline; padding: 10px 0; border-bottom: 1px solid var(--line); font-size: .9375rem; color: var(--ink-2); transition: color .3s ease, padding-left .45s var(--ease); }
+.legal-toc li a span { font-family: var(--mono); font-size: .6875rem; color: var(--ink-3); }
+.legal-toc li a:hover, .legal-toc li a.active { color: var(--ink); padding-left: 6px; }
+.legal-toc li a.active span { color: var(--red); }
+.legal-toc .link-arrow { margin-top: 10px; font-size: .9375rem; }
+.legal-body { grid-column: 6 / span 7; max-width: 68ch; }
+.legal-section { padding: 0 0 44px; margin-bottom: 44px; border-bottom: 1px solid var(--line); scroll-margin-top: 96px; }
+.legal-section:last-child { border-bottom: 0; margin-bottom: 0; }
+.legal-section h2 { display: flex; gap: 16px; align-items: baseline; font-size: clamp(1.5rem, 2.2vw, 1.9rem); line-height: 1.15; letter-spacing: -.03em; margin-bottom: 18px; }
+.legal-section h2 span { font-family: var(--mono); font-size: .75rem; letter-spacing: .06em; color: var(--red); }
+.legal-section p, .legal-section li { color: var(--ink-2); line-height: 1.75; }
+.legal-section p + p { margin-top: 14px; }
+.legal-section ul { margin: 0; padding: 0; list-style: none; display: grid; gap: 12px; }
+.legal-section li { position: relative; padding-left: 22px; }
+.legal-section li::before { content: ""; position: absolute; left: 2px; top: .72em; width: 5px; height: 5px; background: var(--red); transform: rotate(45deg); }
+.legal-section strong { color: var(--ink); font-weight: 500; }
+.legal-section a { color: var(--ink); text-decoration: underline; text-underline-offset: 3px; text-decoration-color: var(--line-2); transition: text-decoration-color .3s ease, color .3s ease; }
+.legal-section a:hover { color: var(--red); text-decoration-color: currentColor; }
+
+@media (max-width: 860px) {
+  .included-grid, .legal-grid { grid-template-columns: minmax(0, 1fr); }
+  .included-copy, .inc-grid, .legal-toc, .legal-body { grid-column: 1 / -1; }
+  .included-copy, .legal-toc { position: static; }
+  .inc-grid { margin-top: 24px; }
+  .legal-toc > .kicker, .legal-toc ol { display: none; }
+  .legal-toc { padding-bottom: 28px; border-bottom: 1px solid var(--line); }
+  .legal-toc .link-arrow { margin-top: 0; }
+}
+@media (max-width: 600px) {
+  .inc-grid { grid-template-columns: 1fr; }
+  .inc { padding: 24px 22px; }
+  .inc-icon { margin-bottom: 10px; }
+  .footer-bottom { align-items: flex-start; }
+}
+
 /* ---------- Scroll reveals ---------- */
 .js .reveal {
   opacity: 0; transform: translate3d(0, 32px, 0);
