@@ -39,3 +39,6 @@ The Privacy Policy and Terms describe exactly what the site does today (Netlify 
 
 ## Important
 The 500+ payouts, $1M+ student profits and 200+ students figures are labeled as reported figures until supporting proof is collected. Replace or remove any claim that ZTRADEZ cannot substantiate before publishing. The Globex status in the hero follows the standard Sunday–Friday schedule and does not account for exchange holidays.
+
+## Discord notifications
+`netlify/functions/submission-created.js` posts every verified application and review to Discord. In Netlify, set the environment variable `DISCORD_WEBHOOK_URL` to a Discord channel webhook (Server Settings → Integrations → Webhooks). Optionally set `DISCORD_REVIEWS_WEBHOOK_URL` to send reviews to a different channel. Redeploy after changing environment variables.
