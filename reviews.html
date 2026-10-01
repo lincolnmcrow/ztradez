@@ -181,7 +181,7 @@
           </ul>
         </div>
 
-        <form class="paper review-form reveal" id="reviewForm" name="student-review" method="POST" data-netlify="true" netlify-honeypot="bot-field" novalidate>
+        <form class="paper review-form reveal" id="reviewForm" name="student-review" method="POST" enctype="multipart/form-data" data-netlify="true" netlify-honeypot="bot-field" novalidate>
           <input type="hidden" name="form-name" value="student-review" />
           <p class="visually-hidden"><label>Don't fill this out: <input name="bot-field" tabindex="-1" autocomplete="off" /></label></p>
 
@@ -212,6 +212,16 @@
             </fieldset>
 
             <label class="field"><span class="field-label">Your review</span><textarea name="review" placeholder="What changed in your trading? What was working with Zander like?" required></textarea></label>
+            <fieldset class="field photos">
+              <legend class="field-label">Photos (optional)</legend>
+              <div class="photo-tiles">
+                <div class="photo-tile"><label><input type="file" name="photo1" accept="image/*" /><span class="photo-add"><b aria-hidden="true">+</b>Photo 1</span></label><button class="photo-clear" type="button" aria-label="Remove photo 1" hidden>×</button></div>
+                <div class="photo-tile"><label><input type="file" name="photo2" accept="image/*" /><span class="photo-add"><b aria-hidden="true">+</b>Photo 2</span></label><button class="photo-clear" type="button" aria-label="Remove photo 2" hidden>×</button></div>
+                <div class="photo-tile"><label><input type="file" name="photo3" accept="image/*" /><span class="photo-add"><b aria-hidden="true">+</b>Photo 3</span></label><button class="photo-clear" type="button" aria-label="Remove photo 3" hidden>×</button></div>
+              </div>
+              <p class="form-note">Payout screenshots, certificates or charts. Up to 3 images, 8 MB total.</p>
+            </fieldset>
+
             <label class="field"><span class="field-label">Email (not published)</span><input name="email" type="email" autocomplete="email" placeholder="So we can confirm it's you" required /></label>
 
             <label class="check"><input type="checkbox" name="permission" value="yes" /><span>ZTRADEZ can publish this review on its website and social media.</span></label>

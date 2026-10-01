@@ -454,11 +454,15 @@
 
   /* ---------- Form helpers ---------- */
   const postToNetlify = async (formEl) => {
-    const response = await fetch('/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-      body: new URLSearchParams(new FormData(formEl)).toString()
-    });
+    // Forms with file inputs must go up as multipart so Netlify keeps the uploads.
+    const hasFiles = !!$('input[type="file"]', formEl);
+    const response = await fetch('/', hasFiles
+      ? { method: 'POST', body: new FormData(formEl) }
+      : {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        body: new URLSearchParams(new FormData(formEl)).toString()
+      });
     if (!response.ok) throw new Error(`HTTP ${response.status}`);
   };
 
@@ -498,6 +502,7 @@
       name: 'Add your name to continue.',
       why: 'Add a sentence or two about what you want to improve.',
       email: 'Enter a valid email address so we can reach you.',
+      discord: 'Add your Discord username so we can reach you there.',
       radio: 'Choose one option to continue.'
     };
 
@@ -599,6 +604,23 @@
   if (reviewForm) {
     const setError = errorReporter(reviewForm, $('.form-error', reviewForm));
     const stars = $('.stars', reviewForm);
+    const PHOTO_LIMIT = 8 * 1024 * 1024;
+
+    $$('.photo-tile', reviewForm).forEach((tile) => {
+      const input = $('input', tile);
+      const clear = $('.photo-clear', tile);
+      let url = '';
+      const show = () => {
+        if (url) URL.revokeObjectURL(url);
+        const file = input.files[0];
+        url = file && file.type.startsWith('image/') ? URL.createObjectURL(file) : '';
+        tile.style.backgroundImage = url ? `url("${url}")` : '';
+        tile.classList.toggle('has-file', !!file);
+        clear.hidden = !file;
+      };
+      input.addEventListener('change', show);
+      clear.addEventListener('click', () => { input.value = ''; show(); input.focus(); });
+    });
 
     const validate = () => {
       const name = field(reviewForm, 'name');
@@ -615,6 +637,9 @@
       }
       if (review.value.trim().length < 10) { setError('Write at least a sentence about your experience.', review); return false; }
       if (!email.value.trim() || !email.checkValidity()) { setError('Enter a valid email so we can confirm the review is yours.', email); return false; }
+      const photos = $$('.photo-tile input', reviewForm).flatMap((input) => [...input.files]);
+      if (photos.some((file) => !file.type.startsWith('image/'))) { setError('Photos must be image files.'); return false; }
+      if (photos.reduce((sum, file) => sum + file.size, 0) > PHOTO_LIMIT) { setError('Photos are over 8 MB in total. Remove one or use smaller images.'); return false; }
       setError('');
       return true;
     };

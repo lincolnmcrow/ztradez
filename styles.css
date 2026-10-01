@@ -863,6 +863,19 @@ fieldset { border: 0; margin: 0; padding: 0; min-width: 0; }
 }
 .paper select:invalid { color: rgba(17, 17, 17, .4); }
 .paper option { color: var(--paper-ink); }
+.photos { margin-bottom: 18px; }
+.photo-tiles { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; margin-top: 10px; }
+.photo-tile { position: relative; aspect-ratio: 1; border: 1px dashed rgba(17, 17, 17, .3); border-radius: 8px; background: center / cover no-repeat; transition: border-color .3s ease; }
+.photo-tile:hover, .photo-tile:focus-within { border-color: var(--red); }
+.photo-tile.has-file { border-style: solid; border-color: rgba(17, 17, 17, .15); }
+.photo-tile label { position: absolute; inset: 0; display: grid; place-items: center; cursor: pointer; }
+.photo-tile input { position: absolute; width: 1px; height: 1px; opacity: 0; }
+.photo-add { display: grid; justify-items: center; gap: 4px; font-family: var(--mono); font-size: .6875rem; letter-spacing: .06em; text-transform: uppercase; color: rgba(17, 17, 17, .55); }
+.photo-add b { font-family: var(--serif); font-size: 1.8rem; font-weight: 400; line-height: 1; color: var(--red); }
+.photo-tile.has-file .photo-add { opacity: 0; }
+.photo-clear { position: absolute; top: 6px; right: 6px; width: 26px; height: 26px; display: grid; place-items: center; border: 0; border-radius: 50%; background: rgba(17, 17, 17, .75); color: #fff; font-size: 1rem; line-height: 1; cursor: pointer; }
+.photo-clear:hover { background: var(--red); }
+.photo-clear[hidden] { display: none; }
 .stars { display: inline-flex; flex-direction: row-reverse; justify-content: flex-end; gap: 2px; margin: 4px 0 18px; }
 .stars input { position: absolute; opacity: 0; pointer-events: none; }
 .stars label { font-size: 2rem; line-height: 1; padding: 2px; color: rgba(17, 17, 17, .18); cursor: pointer; transition: color .2s ease, transform .35s var(--ease); }
