@@ -483,26 +483,168 @@
       const parts = row.split(' ');
       return { iso: parts[0], name: parts.slice(1, -1).join(' '), dial: `+${parts[parts.length - 1]}` };
     })
-    .sort((a, b) => a.name.localeCompare(b.name));
+    // United States first (most applicants), then alphabetical
+    .sort((a, b) => (b.iso === 'US') - (a.iso === 'US') || a.name.localeCompare(b.name));
   const flag = (iso) => String.fromCodePoint(...[...iso].map((c) => 0x1f1a5 + c.charCodeAt(0)));
+
+  // Swaps a native <select> for a searchable, animated list. The select stays in the
+  // form (visually hidden) so validation and submission are unchanged.
+  const enhanceSelect = (select, { placeholder, triggerText, searchLabel }) => {
+    const options = [...select.options].filter((o) => o.value);
+    const wrap = document.createElement('div');
+    wrap.className = 'picker';
+    select.before(wrap);
+    select.classList.add('visually-hidden');
+    select.tabIndex = -1;
+    wrap.append(select);
+    wrap.insertAdjacentHTML('beforeend', `
+      <button class="picker-trigger" type="button" aria-haspopup="listbox" aria-expanded="false">
+        <span class="picker-value"></span><i class="picker-chevron" aria-hidden="true"></i>
+      </button>
+      <div class="picker-panel" hidden>
+        <input class="picker-search" type="text" autocomplete="off" spellcheck="false" placeholder="Search…" aria-label="${searchLabel}" />
+        <ul class="picker-list" role="listbox" aria-label="${searchLabel}"></ul>
+        <p class="picker-empty" hidden>No matches</p>
+      </div>`);
+    const trigger = $('.picker-trigger', wrap);
+    const valueEl = $('.picker-value', wrap);
+    const panel = $('.picker-panel', wrap);
+    const search = $('.picker-search', wrap);
+    const list = $('.picker-list', wrap);
+    const empty = $('.picker-empty', wrap);
+    const items = options.map((option, i) => {
+      const li = document.createElement('li');
+      li.className = 'picker-option';
+      li.setAttribute('role', 'option');
+      li.id = `${select.id}-opt-${i}`;
+      li.innerHTML = `<span class="picker-flag">${flag(option.dataset.iso)}</span><span class="picker-name">${option.dataset.name}</span>${option.dataset.dial ? `<span class="picker-dial">${option.dataset.dial}</span>` : ''}`;
+      li.option = option;
+      li.haystack = `${option.dataset.name} ${option.dataset.dial || ''} ${option.dataset.iso}`.toLowerCase();
+      list.append(li);
+      return li;
+    });
+    // Divider after the pinned United States entry
+    items[0]?.classList.add('picker-pinned');
+
+    let active = -1;
+    const visible = () => items.filter((li) => !li.hidden);
+    const setActive = (li, scroll = true) => {
+      items.forEach((el) => el.classList.toggle('is-active', el === li));
+      active = items.indexOf(li);
+      if (li) {
+        search.setAttribute('aria-activedescendant', li.id);
+        if (scroll) li.scrollIntoView({ block: 'nearest' });
+      } else search.removeAttribute('aria-activedescendant');
+    };
+    const sync = () => {
+      const chosen = select.selectedOptions[0];
+      const picked = chosen && chosen.value ? chosen : null;
+      valueEl.textContent = picked ? triggerText(picked) : placeholder;
+      wrap.classList.toggle('is-empty', !picked);
+      items.forEach((li) => li.setAttribute('aria-selected', String(li.option === picked)));
+    };
+    const filter = () => {
+      const q = search.value.trim().toLowerCase();
+      items.forEach((li) => { li.hidden = !!q && !li.haystack.includes(q); });
+      list.classList.toggle('is-filtered', !!q);
+      const shown = visible();
+      empty.hidden = shown.length > 0;
+      setActive(shown[0] || null);
+    };
+    const open = () => {
+      if (wrap.classList.contains('is-open')) return;
+      $$('.picker.is-open').forEach((other) => other.dispatchEvent(new Event('picker:close')));
+      search.value = '';
+      filter();
+      panel.hidden = false;
+      requestAnimationFrame(() => wrap.classList.add('is-open'));
+      trigger.setAttribute('aria-expanded', 'true');
+      const current = items.find((li) => li.option.selected);
+      if (current) setActive(current, false);
+      list.scrollTop = current ? current.offsetTop - list.clientHeight / 2 + current.offsetHeight / 2 : 0;
+      search.focus({ preventScroll: true });
+    };
+    const close = (refocus = true) => {
+      if (!wrap.classList.contains('is-open')) return;
+      wrap.classList.remove('is-open');
+      trigger.setAttribute('aria-expanded', 'false');
+      setTimeout(() => { if (!wrap.classList.contains('is-open')) panel.hidden = true; }, 200);
+      if (refocus) trigger.focus({ preventScroll: true });
+    };
+    const choose = (li) => {
+      if (!li) return;
+      select.value = li.option.value;
+      select.selectedIndex = options.indexOf(li.option) + (select.options.length - options.length);
+      sync();
+      select.removeAttribute('aria-invalid');
+      select.dispatchEvent(new Event('change', { bubbles: true }));
+      close();
+    };
+
+    trigger.addEventListener('click', () => (wrap.classList.contains('is-open') ? close() : open()));
+    trigger.addEventListener('keydown', (e) => {
+      if (['ArrowDown', 'ArrowUp'].includes(e.key)) { e.preventDefault(); open(); }
+    });
+    search.addEventListener('input', filter);
+    // Keys stay inside the picker so Enter doesn't also advance the form step
+    panel.addEventListener('keydown', (e) => {
+      const shown = visible();
+      const at = shown.indexOf(items[active]);
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        setActive(shown[Math.max(0, Math.min(shown.length - 1, at + (e.key === 'ArrowDown' ? 1 : -1)))]);
+      } else if (e.key === 'Enter') {
+        e.preventDefault(); e.stopPropagation();
+        choose(items[active]);
+      } else if (e.key === 'Escape') {
+        e.preventDefault(); e.stopPropagation();
+        close();
+      } else if (e.key === 'Tab') close(false);
+    });
+    list.addEventListener('pointermove', (e) => {
+      const li = e.target.closest('.picker-option');
+      if (li && li !== items[active]) setActive(li, false);
+    });
+    list.addEventListener('click', (e) => choose(e.target.closest('.picker-option')));
+    document.addEventListener('pointerdown', (e) => { if (!wrap.contains(e.target)) close(false); });
+    wrap.addEventListener('picker:close', () => close(false));
+    // Validation focuses the hidden select; send it to the visible trigger instead
+    select.addEventListener('focus', () => trigger.focus());
+    select.addEventListener('picker:sync', sync);
+    sync();
+  };
+
   const countrySelect = $('#country');
-  const codeSelect = $('#whatsappCode');
+  const codeSelect = $('#phoneCode');
   if (countrySelect && codeSelect) {
     COUNTRIES.forEach(({ iso, name, dial }) => {
-      countrySelect.add(new Option(`${flag(iso)} ${name}`, name));
+      const country = new Option(`${flag(iso)} ${name}`, name);
+      Object.assign(country.dataset, { iso, name });
+      countrySelect.add(country);
       const code = new Option(`${flag(iso)} ${dial}`, dial);
-      code.dataset.iso = iso;
-      code.title = name;
+      Object.assign(code.dataset, { iso, name, dial });
       codeSelect.add(code);
     });
-    // Picking a country pre-fills the WhatsApp code until the applicant changes it themselves
+    enhanceSelect(countrySelect, {
+      placeholder: 'Select your country',
+      searchLabel: 'Search countries',
+      triggerText: (o) => `${flag(o.dataset.iso)}  ${o.dataset.name}`
+    });
+    enhanceSelect(codeSelect, {
+      placeholder: 'Code',
+      searchLabel: 'Search country codes',
+      triggerText: (o) => `${flag(o.dataset.iso)}  ${o.dataset.dial}`
+    });
+    // Picking a country pre-fills the phone code until the applicant changes it themselves
     let codeTouched = false;
     codeSelect.addEventListener('change', () => { codeTouched = true; });
     countrySelect.addEventListener('change', () => {
       if (codeTouched) return;
-      const iso = COUNTRIES.find((c) => c.name === countrySelect.value)?.iso;
-      const match = [...codeSelect.options].findIndex((o) => o.dataset.iso === iso);
-      if (match > 0) codeSelect.selectedIndex = match;
+      const match = [...codeSelect.options].findIndex((o) => o.dataset.name === countrySelect.value);
+      if (match > 0) {
+        codeSelect.selectedIndex = match;
+        codeSelect.dispatchEvent(new Event('picker:sync'));
+      }
     });
   }
 
@@ -534,16 +676,17 @@
       email: 'Enter a valid email address so we can reach you.',
       discord: 'Add your Discord username so we can reach you there.',
       country: 'Choose the country you live in.',
-      whatsapp_code: 'Choose your WhatsApp country code.',
-      whatsapp: 'Enter a valid WhatsApp number (digits only, without the country code).',
-      radio: 'Choose one option to continue.'
+      phone_code: 'Choose your country code.',
+      phone: 'Enter a valid phone number (without the country code).',
+      radio: 'Choose one option to continue.',
+      contact_method: 'Choose WhatsApp or phone so we know how to reach you.'
     };
 
     const validateStep = (step) => {
       for (const input of $$('[required]', step)) {
         if (input.type === 'radio') {
           if (!$(`input[name="${CSS.escape(input.name)}"]:checked`, step)) {
-            setError(messages.radio);
+            setError(messages[input.name] || messages.radio);
             $(`input[name="${CSS.escape(input.name)}"]`, step)?.focus();
             return false;
           }
@@ -561,6 +704,12 @@
     $$('.form-back', form).forEach((btn) => btn.addEventListener('click', () => showStep(current - 1)));
 
     form.addEventListener('input', (e) => { if (e.target.getAttribute('aria-invalid')) setError(''); });
+    const phoneInput = $('#phone', form);
+    $$('input[name="contact_method"]', form).forEach((radio) => radio.addEventListener('change', () => {
+      const label = radio.value === 'WhatsApp' ? 'WhatsApp number' : 'Phone number';
+      phoneInput.placeholder = label;
+      phoneInput.setAttribute('aria-label', label);
+    }));
     form.addEventListener('change', (e) => {
       if (e.target.type !== 'radio') return;
       setError('');
@@ -583,7 +732,8 @@
           name: value('name'), country: value('country'), experience: label('experience'), market: label('market'), challenge: label('challenge'),
           investment: label('investment'), source: label('source'),
           why: value('why'), email: value('email'), discord: value('discord'),
-          whatsapp: [value('whatsapp_code'), value('whatsapp')].filter(Boolean).join(' '), at: Date.now()
+          contactMethod: label('contact_method'),
+          phone: [value('phone_code'), value('phone')].filter(Boolean).join(' '), at: Date.now()
         }));
       } catch (error) { /* storage unavailable: thank-you page falls back to a generic message */ }
     };

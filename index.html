@@ -555,13 +555,20 @@
             <label class="form-q" for="email">Where should we contact you?</label>
             <input id="email" name="email" type="email" autocomplete="email" placeholder="Email address" required />
             <input id="discord" name="discord" type="text" autocomplete="off" placeholder="Discord username" aria-label="Discord username" required />
+            <fieldset class="contact-method">
+              <legend class="field-label">Best number to reach you on</legend>
+              <div class="segmented">
+                <label><input type="radio" name="contact_method" value="WhatsApp" required /><span>WhatsApp</span></label>
+                <label><input type="radio" name="contact_method" value="Phone" /><span>Phone call / text</span></label>
+              </div>
+            </fieldset>
             <div class="phone-field">
-              <select id="whatsappCode" name="whatsapp_code" aria-label="WhatsApp country code" required>
+              <select id="phoneCode" name="phone_code" aria-label="Country code" required>
                 <option value="" disabled selected>Code</option>
               </select>
-              <input id="whatsapp" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="WhatsApp number" aria-label="WhatsApp number" pattern="[0-9 \(\)\-]{5,20}" required />
+              <input id="phone" name="phone" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="Phone number" aria-label="Phone number" pattern="[0-9 \(\)\-]{5,20}" required />
             </div>
-            <p class="form-disclaimer">Submitting an application does not guarantee acceptance into mentorship. By applying you agree to the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>
+            <p class="form-disclaimer">Submitting an application does not guarantee acceptance into mentorship. By applying you agree to be contacted about your application by email, Discord, and the phone method you chose, and you agree to the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>
             <div class="form-buttons"><button class="form-back" type="button"><span aria-hidden="true">←</span> Back</button><button class="btn btn-primary form-submit" type="submit">Submit application <span class="btn-arrow" aria-hidden="true">→</span></button></div>
           </div>
 
