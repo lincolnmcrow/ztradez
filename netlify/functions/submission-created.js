@@ -20,12 +20,22 @@ const field = (name, value, inline = true) => {
 // File inputs arrive as an object ({ url, filename, ... }) or a bare URL string.
 const fileUrl = (value) => (typeof value === 'string' ? value : value?.url) || '';
 
+// wa.me wants the full international number as bare digits, without the local leading 0
+const whatsapp = (code, number) => {
+  const shown = [code, number].map((part) => String(part ?? '').trim()).filter(Boolean).join(' ');
+  const local = String(number ?? '').replace(/\D/g, '').replace(/^0+/, '');
+  if (!local) return shown;
+  return `[${shown}](https://wa.me/${String(code ?? '').replace(/\D/g, '')}${local})`;
+};
+
 const application = (data) => ({
   title: `New application: ${clip(data.name, 200) || 'Unnamed'}`,
   color: RED,
   fields: [
     field('Discord', data.discord),
+    field('WhatsApp', whatsapp(data.whatsapp_code, data.whatsapp)),
     field('Email', data.email),
+    field('Country', data.country),
     field('Experience', data.experience),
     field('Market', data.market),
     field('Main challenge', data.challenge),

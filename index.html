@@ -444,7 +444,7 @@
           <h2 class="reveal">Ready to take <em>your process seriously?</em></h2>
           <p class="reveal">Private mentorship is intentionally limited. Answer a few quick questions so ZTRADEZ can understand where you are and what you want to improve.</p>
           <ul class="apply-notes reveal">
-            <li>8 quick questions</li>
+            <li>9 quick questions</li>
             <li>About 2 minutes</li>
             <li>No payment required to apply</li>
           </ul>
@@ -455,7 +455,7 @@
           <p class="visually-hidden"><label>Don't fill this out: <input name="bot-field" tabindex="-1" autocomplete="off" /></label></p>
 
           <div class="form-progress">
-            <span id="progressLabel">01 / 08</span>
+            <span id="progressLabel">01 / 09</span>
             <div class="form-progress-bar"><i id="progressBar"></i></div>
           </div>
 
@@ -463,6 +463,14 @@
             <label class="form-q" for="name">First, what's your name?</label>
             <input id="name" name="name" type="text" autocomplete="name" placeholder="Your name" required />
             <div class="form-buttons"><span></span><button class="form-next" type="button">Continue <span aria-hidden="true">→</span></button></div>
+          </div>
+
+          <div class="form-step">
+            <label class="form-q" for="country">Which country are you in?</label>
+            <select id="country" name="country" autocomplete="country-name" required>
+              <option value="" disabled selected>Select your country</option>
+            </select>
+            <div class="form-buttons"><button class="form-back" type="button"><span aria-hidden="true">←</span> Back</button><button class="form-next" type="button">Continue <span aria-hidden="true">→</span></button></div>
           </div>
 
           <div class="form-step">
@@ -547,6 +555,12 @@
             <label class="form-q" for="email">Where should we contact you?</label>
             <input id="email" name="email" type="email" autocomplete="email" placeholder="Email address" required />
             <input id="discord" name="discord" type="text" autocomplete="off" placeholder="Discord username" aria-label="Discord username" required />
+            <div class="phone-field">
+              <select id="whatsappCode" name="whatsapp_code" aria-label="WhatsApp country code" required>
+                <option value="" disabled selected>Code</option>
+              </select>
+              <input id="whatsapp" name="whatsapp" type="tel" inputmode="tel" autocomplete="tel-national" placeholder="WhatsApp number" aria-label="WhatsApp number" pattern="[0-9 \(\)\-]{5,20}" required />
+            </div>
             <p class="form-disclaimer">Submitting an application does not guarantee acceptance into mentorship. By applying you agree to the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>
             <div class="form-buttons"><button class="form-back" type="button"><span aria-hidden="true">←</span> Back</button><button class="btn btn-primary form-submit" type="submit">Submit application <span class="btn-arrow" aria-hidden="true">→</span></button></div>
           </div>
